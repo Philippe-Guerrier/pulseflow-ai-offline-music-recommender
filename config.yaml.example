@@ -15,7 +15,7 @@ faiss_index_file: "data/faiss.index"
 # directory by default when no --music-dir option is provided.  You can
 # override it on the command line.  This field is deliberately blank to
 # avoid committing a personal path to version control.
-music_dir: 'C:\Users\phili\Music\Music Downloads\music-llm'
+music_dir: '/path/to/your/music/library'
 
 sequencing:
   # Every N tracks, switch into contrast mode (negative style weight) to encourage
@@ -46,8 +46,8 @@ llm:
 # Provide default values for playlist generation.  If you do not supply
 # --input-audio or --start-path on the command line, the system will fall
 # back to these fields.  Leave them empty to require an argument.
-default_input_audio: 'C:\Users\phili\Documents\LLM Projects\Music-Algo-LLM\Play_Path'
-default_start_path: 'C:\Users\phili\Documents\LLM Projects\Music-Algo-LLM\Music Downloads_1\Juice Wrld - Lucid Dreams (Dir. by @_ColeBennett_).mp3'
+default_input_audio: '/path/to/your/empty/file'
+default_start_path: '/path/to/your/target/music'
 # Default length and policy when generating a playlist if not specified.
 playlist_length: 20
 default_policy: "smooth"
