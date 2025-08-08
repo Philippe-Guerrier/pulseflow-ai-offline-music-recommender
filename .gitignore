@@ -1,0 +1,22 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+.env/
+
+# Data artefacts (fingerprints, embeddings, indices, features)
+data/
+
+# Local settings
+# Do not ignore config.yaml; it is part of the repository.  Leave the
+# 'music_dir' field blank in the committed file and set it locally after cloning.
+
+# Notebook checkpoints
+*.ipynb_checkpoints
+
+# OS files
+.DS_Store
+Thumbs.db

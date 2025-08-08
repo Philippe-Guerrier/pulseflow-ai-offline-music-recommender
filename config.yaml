@@ -1,0 +1,53 @@
+## Default configuration for the music recommendation system
+
+# Where to store persistent artefacts.  Paths are relative to the project root
+# unless they start with a slash.
+database_path: "data/fingerprints.db"
+embedding_file: "data/embeddings.npy"
+mapping_file: "data/embedding_mapping.txt"
+feature_file: "data/features.json"
+faiss_index_file: "data/faiss.index"
+
+###############################################################################
+# Data source
+#
+# Define the path to your music library here.  The scripts will use this
+# directory by default when no --music-dir option is provided.  You can
+# override it on the command line.  This field is deliberately blank to
+# avoid committing a personal path to version control.
+music_dir: 'C:\Users\phili\Music\Music Downloads\music-llm'
+
+sequencing:
+  # Every N tracks, switch into contrast mode (negative style weight) to encourage
+  # stylistic diversity while respecting mood/tempo constraints.  Set to a large
+  # number to disable contrast.
+  contrast_every: 3
+  mood_threshold: 0.3      # allowable Euclidean distance in 2‑D mood space (valence/arousal)
+  tempo_threshold: 10      # allowable BPM difference on contrast slots
+  key_threshold: 2         # allowable distance on the circle of fifths
+  energy_threshold: 0.4    # allowable energy difference on contrast slots
+  weights:
+    style:  0.3            # weight for timbral/style distance (embeddings + tags)
+    mood:   1.0            # weight for mood difference (valence/arousal)
+    tempo:  0.5            # weight for tempo (BPM) difference
+    key:    0.4            # weight for key difference (circle of fifths)
+    energy: 0.5            # weight for energy difference
+
+llm:
+  # LLM model to use via Ollama.  See https://ollama.com/library for options.
+  model: "qwen2.5vl:3b"
+  max_tokens: 160
+  temperature: 0.7
+  stop: ["</END>"]
+
+#
+# Playlist defaults
+#
+# Provide default values for playlist generation.  If you do not supply
+# --input-audio or --start-path on the command line, the system will fall
+# back to these fields.  Leave them empty to require an argument.
+default_input_audio: 'C:\Users\phili\Documents\LLM Projects\Music-Algo-LLM\Play_Path'
+default_start_path: 'C:\Users\phili\Documents\LLM Projects\Music-Algo-LLM\Music Downloads_1\Juice Wrld - Lucid Dreams (Dir. by @_ColeBennett_).mp3'
+# Default length and policy when generating a playlist if not specified.
+playlist_length: 20
+default_policy: "smooth"
