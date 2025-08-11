@@ -193,8 +193,12 @@ Use `--force` to rebuild everything.
 
 ### 2. Make a playlist
 
-From a snippet:
+From a snippet in the previous version
+```sh
+C:\path\to\your\envs\musicrec\python.exe run.py web
+```
 
+From a snippet in the previous version
 ```sh
 python main.py playlist --input-audio /path/to/snippet.wav --length 20 --policy smooth
 ```
