@@ -206,35 +206,91 @@ def ui(args: argparse.Namespace) -> None:
     ])
 
 
-# ------------------------ CLI ------------------------
+def _launch_web():
+    import uvicorn
+    # if load_config is already defined in this file, just call it:
+    cfg = load_config("config.yaml")
+    host = cfg.get("web", {}).get("host", "127.0.0.1")
+    port = int(cfg.get("web", {}).get("port", 7860))
+    # web.app_web:app points to web/app_web.py (FastAPI instance named 'app')
+    uvicorn.run("web.app_web:app", host=host, port=port, reload=False)
 
-def main(argv: list[str] | None = None) -> None:
-    p = argparse.ArgumentParser(prog="music-rec", description="Local music recommender")
-    p.add_argument("--config", type=str, default=CONFIG_DEFAULT, help="Path to config.yaml")
 
-    sp = p.add_subparsers(dest="cmd", required=True)
+# ---- CLI wiring ----
+import argparse
 
-    pi = sp.add_parser("digest", help="(alias) see 'ingest'")
-    pi.set_defaults(func=ingest)
-    pi.add_argument("--force", action="store_true", help="Recompute everything")
+def cmd_ingest(args):
+    # existing function you already have, or import and call your ingest entrypoint
+    from scripts import extract_features as ef, embed_clap as ec, build_faiss_index as bi
+    # chain the three steps; they should read paths from config.yaml by default
+    ef.main(["--config", args.config])
+    ec.main(["--config", args.config])
+    bi.main(["--config", args.config])
 
-    p_ing = sp.add_parser("ingest", help="Build features/embeddings/index")
-    p_ing.set_defaults(func=ingest)
-    p_ing.add_argument("--force", action="store_true", help="Recompute everything")
+def cmd_playlist(args):
+    # existing function you already have, or dispatch to generate_playlist
+    from scripts import generate_playlist as gp
+    argv = ["--config", args.config, "--length", str(args.length), "--policy", args.policy]
+    if args.input_audio:
+        argv += ["--input-audio", args.input_audio]
+    if args.start_path:
+        argv += ["--start-path", args.start_path]
+    gp.main(argv)
 
-    p_pl = sp.add_parser("playlist", help="Generate a playlist")
+def cmd_interface(args):
+    # existing function you already have for the desktop interface
+    from scripts import interface as ui
+    ui.main(["--config", args.config])
+
+def cmd_web(args):
+    # NEW: lightweight web UI via Uvicorn
+    try:
+        import uvicorn  # auto-installed by run.py ensure-deps
+    except Exception as e:
+        print("Uvicorn is required. Install with: pip install uvicorn fastapi python-multipart")
+        raise
+    # assumes you created scripts/web_app.py with a FastAPI app called `app`
+    uvicorn.run("scripts.web_app:app", host=args.host, port=args.port, reload=False, log_level="info")
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="PulseFlow AI CLI")
+    parser.add_argument("--config", default="config.yaml", help="Path to config.yaml")
+
+    subparsers = parser.add_subparsers(dest="command", metavar="{ ingest | playlist | interface | web }")
+
+    # ingest
+    p_ing = subparsers.add_parser("ingest", help="Run feature/embedding/index pipeline")
+    p_ing.set_defaults(func=cmd_ingest)
+
+    # playlist
+    p_pl = subparsers.add_parser("playlist", help="Generate a playlist")
     g = p_pl.add_mutually_exclusive_group(required=False)
-    g.add_argument("--input-audio", type=str, help="Seed clip (WAV/FLAC/MP3…)")
-    g.add_argument("--start-path", type=str, help="Seed track path in library")
-    p_pl.add_argument("--length", type=int, default=None, help="Playlist length (overrides config)")
-    p_pl.add_argument("--policy", type=str, choices=["smooth", "contrast"], default=None)
-    p_pl.set_defaults(func=playlist)
+    g.add_argument("--input-audio", default="", help="WAV/MP3 clip to identify from")
+    g.add_argument("--start-path", default="", help="Known track path to start from")
+    p_pl.add_argument("--length", type=int, default=20)
+    p_pl.add_argument("--policy", choices=["smooth","contrast"], default="smooth")
+    p_pl.set_defaults(func=cmd_playlist)
 
-    p_ui = sp.add_parser("interface", help="Interactive picker UI")
-    p_ui.set_defaults(func=ui)
+    # interface 
+    p_ui = subparsers.add_parser("interface", help="Open desktop interface")
+    p_ui.set_defaults(func=cmd_interface)
 
-    args = p.parse_args(argv)
+    # web 
+    p_web = subparsers.add_parser("web", help="Run lightweight web UI")
+    p_web.add_argument("--host", default="127.0.0.1")
+    p_web.add_argument("--port", type=int, default=7860)
+    p_web.set_defaults(func=cmd_web)
+
+    return parser
+
+def main(argv=None):
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    if not hasattr(args, "func"):
+        parser.print_help()
+        return
     args.func(args)
 
 if __name__ == "__main__":
     main()
+# ---- end CLI wiring ----

@@ -5,12 +5,19 @@ Ollama’s HTTP API.  If the Ollama service is not running or a model is
 not configured, the `explain_transition` function will return a
 placeholder string.  See `config.yaml` for LLM settings.
 """
-from __future__ import annotations
 
+"""LLM explanations (Ollama/local)."""
+#from __future__ import annotations
+
+import os
 import json
+import time
+from typing import Optional, List, Dict
+import subprocess
+import requests
+
 import sys
 from pathlib import Path
-from typing import Dict, Optional
 
 import yaml
 
@@ -127,3 +134,43 @@ def explain_transition(
         desc.append(f"Mood change: {metrics['mood_delta']:.2f}.")
         desc.append(f"BPM: {metrics['bpm_from']}→{metrics['bpm_to']}, key diff: {metrics['key_diff']}.")
         return " ".join(desc)
+
+
+
+def _ollama(prompt: str, model: str = "qwen2.5:3b", max_tokens: int = 160, temperature: float = 0.7) -> str:
+    # Minimal local call to Ollama CLI. Keep it simple & offline.
+    cmd = ["ollama", "run", model, "--nowordwrap"]
+    p = subprocess.run(cmd, input=prompt.encode("utf-8"), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    return p.stdout.decode("utf-8", errors="ignore").strip()
+
+def explain_playlist_summary(tracks: List[Dict], policy: str, model: str, max_tokens:int, temperature:float) -> Dict[str,str]:
+    titles = [f"{t.get('title') or t.get('path')}" for t in tracks]
+    prompt = (
+      "You are a concise music adviser. In 3 short sentences:\n"
+      "1) Name ONE standout track from this list as 'Top pick'.\n"
+      "2) Describe the overall vibe in 1 sentence.\n"
+      f"3) Mention how the sequencing fits a {policy} policy.\n"
+      "Tracks:\n- " + "\n- ".join(titles) + "\n"
+      "Respond as:\nTop pick: <title>\nOverview: <one sentence>\n"
+    )
+    txt = _ollama(prompt, model=model, max_tokens=max_tokens, temperature=temperature)
+    top, overview = "", ""
+    for line in txt.splitlines():
+        lo = line.lower()
+        if lo.startswith("top pick"):
+            top = line.split(":",1)[-1].strip()
+        elif lo.startswith("overview"):
+            overview = line.split(":",1)[-1].strip()
+    return {"top_pick": top, "overview": overview or txt[:240]}
+
+def explain_transition(curr: Dict, nxt: Dict, stats: Dict[str,str], model: str, max_tokens:int, temperature:float) -> str:
+    t1 = curr.get("title") or curr.get("path")
+    t2 = nxt.get("title") or nxt.get("path")
+    s = ", ".join([f"{k}={v}" for k,v in (stats or {}).items()])
+    prompt = (
+      "Be concise (≤2 sentences). Explain why this transition works for listening.\n"
+      f"From: {t1}\nTo: {t2}\nStats: {s}\n"
+      "End with one emoji."
+    )
+    return _ollama(prompt, model=model, max_tokens=max_tokens, temperature=temperature)
+

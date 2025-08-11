@@ -68,6 +68,9 @@ REQUIRED_BASE = {
     "mutagen": "mutagen>=1.46",
     "requests": "requests>=2.31",
     "faiss": "faiss-cpu",              # module 'faiss', package 'faiss-cpu'
+    "uvicorn":   "uvicorn[standard]>=0.30",
+    "fastapi":   "fastapi>=0.111",
+    "multipart": "python-multipart>=0.0.9", 
     # laion_clap is installed separately after we fix progressbar
 }
 

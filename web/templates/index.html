@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PulseFlow AI — Offline Music Recommender & Recogniser</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="wrapper">
+    <h1>PulseFlow AI</h1>
+    <p class="muted">Offline music identification and playlist recommendations on your machine.</p>
+
+    <div class="panel">
+      <h3 style="margin-top:0">Status</h3>
+      <p class="muted">
+        Music dir: <strong>{{ cfg.music_dir if cfg and cfg.music_dir else "(not set)" }}</strong> ·
+        FAISS index: <strong>{{ "present" if has_index else "missing" }}</strong> ·
+        LLM model: <strong>{{ cfg.llm.model if cfg and cfg.llm and cfg.llm.model else "not configured" }}</strong>
+      </p>
+    </div>
+
+    <div class="panel">
+      <h3 style="margin-top:0">Ingest Library</h3>
+      <p class="muted">Extract features, compute CLAP embeddings, and build a FAISS index.</p>
+      <button id="btnIngest" class="secondary">Run Ingest</button>
+      <pre id="ingestLog" style="margin-top:12px;"></pre>
+    </div>
+
+    <div class="panel">
+      <h3 style="margin-top:0">Generate Playlist</h3>
+      <form id="playlistForm">
+        <div class="row">
+          <div>
+            <label>Clip (optional, will identify track)</label>
+            <input type="file" name="clip" accept="audio/*" />
+          </div>
+          <div>
+            <label>Start path (optional, full path on this machine)</label>
+            <input type="text" name="start_path" placeholder="C:\Music\Artist\Track.flac" />
+          </div>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <div>
+            <label>Length</label>
+            <input type="number" name="length" value="20" min="1" max="200" />
+          </div>
+          <div>
+            <label>Policy</label>
+            <select name="policy">
+              <option value="smooth">smooth</option>
+              <option value="contrast">contrast</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-top:14px">
+          <button type="submit">Generate</button>
+        </div>
+      </form>
+      <pre id="playlistOut" style="margin-top:12px;"></pre>
+    </div>
+
+    <footer>
+      PulseFlow AI — runs fully offline. If you configure an LLM in <code>config.yaml</code>, you’ll get transition explanations too.
+    </footer>
+  </div>
+
+<script>
+const byId = (id) => document.getElementById(id);
+
+const safeStringify = (obj) =>
+  JSON.stringify(
+    obj,
+    (key, value) => {
+      // If a text field accidentally arrives as an object, force it to a string
+      if (["explanation", "overview", "top_pick", "title"].includes(key) &&
+          value && typeof value === "object") {
+        try { return JSON.stringify(value); } catch { return String(value); }
+      }
+      return value;
+    },
+    2
+  );
+
+byId("btnIngest").addEventListener("click", async () => {
+  byId("ingestLog").textContent = "Running ingest…";
+  try {
+    const res = await fetch("/ingest", { method: "POST" });
+    const data = await res.json();
+    byId("ingestLog").textContent = safeStringify(data);
+  } catch (e) {
+    byId("ingestLog").textContent = "Error: " + e;
+  }
+});
+
+byId("playlistForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  byId("playlistOut").textContent = "Generating…";
+  const fd = new FormData(e.target);
+  try {
+    const res = await fetch("/playlist", { method: "POST", body: fd });
+    const data = await res.json();
+    byId("playlistOut").textContent = safeStringify(data);
+  } catch (e2) {
+    byId("playlistOut").textContent = "Error: " + e2;
+  }
+});
+</script>
+</body>
+</html>

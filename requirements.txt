@@ -11,3 +11,5 @@ PyDejavu>=0.6
 librosa>=0.10
 faiss-cpu>=1.7
 laion-clap @ git+https://github.com/LAION-AI/CLAP.git#egg=laion_clap
+fastapi
+uvicorn

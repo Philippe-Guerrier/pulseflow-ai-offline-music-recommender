@@ -34,11 +34,18 @@ sequencing:
     energy: 0.5            # weight for energy difference
 
 llm:
-  # LLM model to use via Ollama.  See https://ollama.com/library for options.
+  # LLM model to use via Ollama.
+  enabled: true
   model: "qwen2.5vl:3b"
   max_tokens: 160
   temperature: 0.7
   stop: ["</END>"]
+
+
+web:
+  host: "127.0.0.1"
+  port: 7860
+
 
 #
 # Playlist defaults
@@ -51,3 +58,6 @@ default_start_path: '/path/to/your/target/music'
 # Default length and policy when generating a playlist if not specified.
 playlist_length: 20
 default_policy: "smooth"
+
+
+
