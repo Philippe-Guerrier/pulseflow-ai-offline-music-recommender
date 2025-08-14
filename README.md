@@ -1,7 +1,7 @@
-# Local Music Recommendation System – Offline, Smooth, and Customizable
+# Local Music Recommendation System - Offline, Smooth, and Customizable
 
 This is my end-to-end **offline** music identification and recommendation system.  
-No cloud, no hidden data uploads — it runs entirely on your machine.  
+No cloud, no hidden data uploads - it runs entirely on your machine.  
 It’s designed to avoid the usual Windows install headaches (no **Essentia** builds) and works on both GPU and CPU, but obviously flies faster with an NVIDIA GPU.
 
 ---
@@ -28,7 +28,7 @@ music_rec_improved/
 ├── environment.yml       # Conda environment definition (optional)
 ├── config.yaml           # Centralised configuration (paths, weights, LLM settings)
 ├── .gitignore            # Ignore virtualenvs, caches and large data files
-├── data/                 # **Untracked** – stores fingerprints, embeddings, features, indices
+├── data/                 # **Untracked** - stores fingerprints, embeddings, features, indices
 │   └── README.md         # Explains the purpose of each file in data/
 ├── scripts/              # Individual pipeline components
 │   ├── fingerprint.py       # Build the fingerprint database from your music library
@@ -79,7 +79,7 @@ pip install -r requirements.txt
 
 ### Configure your music library
 
-Before running any scripts, open `config.yaml` and set the `music_dir` field to the absolute path of your music collection.  This path is not committed to the repository—leaving it blank in version control ensures you don’t leak personal file locations.  Once set, all scripts will use it by default, so you don’t need to pass `--music-dir` on the command line.
+Before running any scripts, open `config.yaml` and set the `music_dir` field to the absolute path of your music collection.  This path is not committed to the repository-leaving it blank in version control ensures you don’t leak personal file locations.  Once set, all scripts will use it by default, so you don’t need to pass `--music-dir` on the command line.
 
 ## Usage
 
@@ -186,7 +186,7 @@ python main.py ingest
 ```
 
 This fingerprints your music, extracts features, makes embeddings, and builds the FAISS index.  
-If you add new tracks later, just re-run — only new ones get processed.  
+If you add new tracks later, just re-run - only new ones get processed.  
 Use `--force` to rebuild everything.
 
 ---
